@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PayVault – Smart Digital Wallet</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent3: #43e97b;
+    --accent4: #f7971e;
+    --text: #f0f0f8;
+    --text2: #8888aa;
+    --text3: #5555770;
+    --card-shadow: 0 8px 32px rgba(108,99,255,0.08);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; }
+
+  /* ── AUTH ── */
+  .auth-wrap {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(ellipse at 30% 20%, #1a1540 0%, var(--bg) 60%);
+    padding: 24px;
+  }
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: 0 24px 80px rgba(108,99,255,0.15);
+    animation: slideUp 0.5s ease;
+  }
+  @keyframes slideUp {
+    from { opacity:0; transform:translateY(30px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .auth-logo {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 36px;
+  }
+  .auth-logo-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: grid; place-items: center; font-size: 22px;
+  }
+  .auth-logo h1 { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; }
+  .auth-logo span { color: var(--accent); }
+  .auth-tab {
+    display: flex; background: var(--surface2);
+    border-radius: 12px; padding: 4px; margin-bottom: 32px;
+  }
+  .auth-tab button {
+    flex: 1; padding: 10px; border: none; background: transparent;
+    color: var(--text2); font-family: 'Syne', sans-serif;
+    font-weight: 600; font-size: 0.9rem; border-radius: 9px;
+    cursor: pointer; transition: all 0.25s;
+  }
+  .auth-tab button.active {
+    background: var(--accent); color: #fff;
+  }
+  .field { margin-bottom: 18px; }
+  .field label { display: block; font-size: 0.8rem; color: var(--text2); font-weight: 500; margin-bottom: 6px; }
+  .field input {
+    width: 100%; padding: 13px 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none; transition: border-color 0.2s;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .btn {
+    width: 100%; padding: 14px; border: none;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    color: #fff; font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem; border-radius: 12px;
+    cursor: pointer; transition: all 0.2s; margin-top: 4px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(108,99,255,0.35); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .btn-outline {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text2);
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); box-shadow: none; }
+  .btn-sm { width: auto; padding: 8px 18px; font-size: 0.85rem; border-radius: 9px; }
+  .btn-danger { background: linear-gradient(135deg, var(--accent2), #ff8e8e); }
+  .btn-success { background: linear-gradient(135deg, var(--accent3), #38f9d7); color: #0a2a1a; }
+  .error-msg { color: var(--accent2); font-size: 0.85rem; margin-top: 12px; text-align: center; }
+  .success-msg { color: var(--accent3); font-size: 0.85rem; margin-top: 12px; text-align: center; }
+
+  /* ── LAYOUT ── */
+  .app-layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 260px; min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 28px 20px;
+    position: fixed; left: 0; top: 0; bottom: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 8px; margin-bottom: 40px;
+  }
+  .sidebar-logo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: grid; place-items: center; font-size: 18px;
+  }
+  .sidebar-logo h2 { font-size: 1.25rem; font-weight: 800; }
+  .sidebar-logo span { color: var(--accent); }
+  .nav-section-label {
+    font-size: 0.7rem; font-weight: 700; color: var(--text2);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    padding: 0 8px; margin: 20px 0 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; border-radius: 12px;
+    color: var(--text2); cursor: pointer;
+    font-weight: 500; font-size: 0.9rem;
+    transition: all 0.2s; margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: rgba(108,99,255,0.12);
+    color: var(--accent); border-color: rgba(108,99,255,0.2);
+    font-weight: 600;
+  }
+  .nav-icon { font-size: 1.15rem; width: 22px; text-align: center; }
+  .sidebar-footer { margin-top: auto; }
+  .user-badge {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; background: var(--surface2);
+    border-radius: 12px; margin-bottom: 12px;
+  }
+  .user-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    display: grid; place-items: center;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.9rem; flex-shrink: 0;
+  }
+  .user-info { min-width: 0; }
+  .user-info .name { font-size: 0.85rem; font-weight: 600; truncate; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-info .email { font-size: 0.72rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-logout {
+    width: 100%; padding: 10px; background: transparent;
+    border: 1px solid var(--border); color: var(--text2);
+    border-radius: 10px; cursor: pointer; font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif; transition: all 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ── MAIN ── */
+  .main { margin-left: 260px; padding: 36px 40px; flex: 1; min-height: 100vh; }
+  .page-header { margin-bottom: 32px; }
+  .page-header h2 { font-size: 1.75rem; font-weight: 800; }
+  .page-header p { color: var(--text2); margin-top: 4px; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+  /* ── BALANCE CARD ── */
+  .balance-card {
+    background: linear-gradient(135deg, #1e1b4b, #312e81, var(--accent));
+    border: none; border-radius: 24px; padding: 32px;
+    position: relative; overflow: hidden;
+    grid-column: 1 / -1;
+  }
+  .balance-card::before {
+    content: ''; position: absolute;
+    width: 300px; height: 300px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -100px; right: -80px;
+  }
+  .balance-card::after {
+    content: ''; position: absolute;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    bottom: -60px; right: 80px;
+  }
+  .balance-label { font-size: 0.85rem; color: rgba(255,255,255,0.7); font-weight: 500; }
+  .balance-amount {
+    font-family: 'Syne', sans-serif;
+    font-size: 3rem; font-weight: 800;
+    margin: 8px 0; letter-spacing: -1px;
+  }
+  .balance-currency { font-size: 1.5rem; opacity: 0.7; margin-right: 4px; }
+  .balance-meta { display: flex; gap: 24px; margin-top: 20px; }
+  .balance-meta-item { }
+  .balance-meta-item .lbl { font-size: 0.75rem; color: rgba(255,255,255,0.6); }
+  .balance-meta-item .val { font-weight: 600; font-size: 0.95rem; }
+  .balance-actions { display: flex; gap: 12px; margin-top: 24px; position: relative; z-index: 1; }
+  .balance-btn {
+    padding: 10px 22px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.1); color: #fff;
+    font-family: 'Syne', sans-serif; font-weight: 600; font-size: 0.85rem;
+    cursor: pointer; backdrop-filter: blur(8px);
+    transition: all 0.2s; display: flex; align-items: center; gap: 8px;
+  }
+  .balance-btn:hover { background: rgba(255,255,255,0.2); }
+
+  /* ── STAT CARDS ── */
+  .stat-card { padding: 20px 22px; }
+  .stat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 1.15rem; margin-bottom: 14px;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--text2); margin-bottom: 4px; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 700; }
+
+  /* ── TRANSACTIONS ── */
+  .tx-list { display: flex; flex-direction: column; gap: 2px; }
+  .tx-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 12px;
+    transition: background 0.2s; cursor: default;
+  }
+  .tx-item:hover { background: var(--surface2); }
+  .tx-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0;
+  }
+  .tx-info { flex: 1; min-width: 0; }
+  .tx-info .title { font-weight: 500; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tx-info .sub { font-size: 0.78rem; color: var(--text2); margin-top: 2px; }
+  .tx-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+  .tx-amount.credit { color: var(--accent3); }
+  .tx-amount.debit { color: var(--accent2); }
+  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .section-header h3 { font-size: 1rem; font-weight: 700; }
+  .see-all { font-size: 0.82rem; color: var(--accent); cursor: pointer; font-weight: 600; }
+  .see-all:hover { text-decoration: underline; }
+
+  /* ── MODAL / FORM OVERLAY ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    display: grid; place-items: center; z-index: 1000;
+    padding: 24px; animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 24px; padding: 36px; width: 100%; max-width: 420px;
+    animation: slideUp 0.3s ease;
+  }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .modal-header h3 { font-size: 1.2rem; font-weight: 800; }
+  .modal-close {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text2); cursor: pointer; font-size: 1rem;
+    display: grid; place-items: center;
+  }
+  .amount-input-wrap { position: relative; }
+  .amount-prefix {
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    color: var(--text2); font-size: 1.1rem; font-weight: 600;
+  }
+  .amount-input-wrap input { padding-left: 34px !important; }
+  select {
+    width: 100%; padding: 13px 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif; outline: none;
+    transition: border-color 0.2s; cursor: pointer;
+  }
+  select:focus { border-color: var(--accent); }
+  textarea {
+    width: 100%; padding: 13px 16px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text); font-size: 0.95rem;
+    font-family: 'DM Sans', sans-serif; outline: none; resize: none;
+    transition: border-color 0.2s;
+  }
+  textarea:focus { border-color: var(--accent); }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 20px; align-items: center;
+  }
+  .filter-bar input, .filter-bar select { width: auto; padding: 9px 14px; font-size: 0.85rem; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .badge-pending { background: rgba(247,151,30,0.15); color: var(--accent4); }
+  .badge-approved { background: rgba(67,233,123,0.15); color: var(--accent3); }
+  .badge-rejected { background: rgba(255,107,107,0.15); color: var(--accent2); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text2); }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+  .empty-state p { font-size: 0.9rem; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 32px; right: 32px; z-index: 9999;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 20px;
+    display: flex; align-items: center; gap: 12px;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    max-width: 320px;
+  }
+  .toast.success { border-color: var(--accent3); }
+  .toast.error { border-color: var(--accent2); }
+  .toast-icon { font-size: 1.2rem; }
+  .toast-msg { font-size: 0.88rem; font-weight: 500; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.2);
+    color: var(--accent); padding: 4px 12px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 600;
+  }
+  .loading { display: flex; justify-content: center; padding: 40px; color: var(--text2); }
+  .pr-card {
+    background: var(--surface2); border-radius: 14px;
+    padding: 18px 20px; margin-bottom: 10px;
+    border: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .pr-card-info { flex: 1; }
+  .pr-card-info .title { font-weight: 600; font-size: 0.92rem; margin-bottom: 4px; }
+  .pr-card-info .sub { font-size: 0.8rem; color: var(--text2); }
+  .pr-card-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--accent4); white-space: nowrap; }
+  .pr-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-260px); }
+    .main { margin-left: 0; padding: 20px; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+// ── MOCK DATA / STORAGE ENGINE ────────────────────────────────────────────────
+const store = {
+  get: (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set: (k, v) => localStorage.setItem(k, JSON.stringify(v)),
+};
+
+const initDB = () => {
+  if (!store.get('users')) store.set('users', []);
+  if (!store.get('wallets')) store.set('wallets', []);
+  if (!store.get('transactions')) store.set('transactions', []);
+  if (!store.get('paymentRequests')) store.set('paymentRequests', []);
+  if (!store.get('nextId')) store.set('nextId', 1);
+};
+const uid = () => { const id = store.get('nextId') || 1; store.set('nextId', id + 1); return id; };
+const now = () => new Date().toISOString();
+const fmt = (date) => new Date(date).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+const fmtMoney = (n) => '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// ── API LAYER (localStorage simulation) ───────────────────────────────────────
+const API = {
+  register: ({ name, email, password }) => {
+    initDB();
+    const users = store.get('users');
+    if (users.find(u => u.email === email)) throw new Error('Email already registered');
+    const user = { id: uid(), name, email, password, created_at: now() };
+    users.push(user);
+    store.set('users', users);
+    const wallets = store.get('wallets');
+    wallets.push({ id: uid(), user_id: user.id, balance: 1000, currency: 'INR' });
+    store.set('wallets', wallets);
+    // welcome transaction
+    const txs = store.get('transactions');
+    txs.push({ id: uid(), sender_id: null, receiver_id: user.id, amount: 1000, type: 'credit', category: 'Bonus', note: 'Welcome bonus!', status: 'completed', created_at: now() });
+    store.set('transactions', txs);
+    const token = btoa(JSON.stringify({ id: user.id, email, name }));
+    return { token, user: { id: user.id, name, email } };
+  },
+  login: ({ email, password }) => {
+    initDB();
+    const users = store.get('users');
+    const user = users.find(u => u.email === email && u.password === password);
+    if (!user) throw new Error('Invalid email or password');
+    const token = btoa(JSON.stringify({ id: user.id, email: user.email, name: user.name }));
+    return { token, user: { id: user.id, name: user.name, email: user.email } };
+  },
+  getUser: (token) => { try { return JSON.parse(atob(token)); } catch { return null; } },
+  getWallet: (userId) => {
+    const wallets = store.get('wallets') || [];
+    return wallets.find(w => w.user_id === userId);
+  },
+  addMoney: (userId, amount) => {
+    const wallets = store.get('wallets') || [];
+    const idx = wallets.findIndex(w => w.user_id === userId);
+    if (idx === -1) throw new Error('Wallet not found');
+    wallets[idx].balance += amount;
+    store.set('wallets', wallets);
+    const txs = store.get('transactions') || [];
+    txs.push({ id: uid(), sender_id: null, receiver_id: userId, amount, type: 'credit', category: 'Add Money', note: 'Added to wallet', status: 'completed', created_at: now() });
+    store.set('transactions', txs);
+  },
+  transfer: (senderId, { to_email, amount, note, category }) => {
+    const users = store.get('users') || [];
+    const receiver = users.find(u => u.email === to_email);
+    if (!receiver) throw new Error('Recipient not found');
+    if (receiver.id === senderId) throw new Error('Cannot transfer to yourself');
+    const wallets = store.get('wallets') || [];
+    const sIdx = wallets.findIndex(w => w.user_id === senderId);
+    const rIdx = wallets.findIndex(w => w.user_id === receiver.id);
+    if (wallets[sIdx].balance < amount) throw new Error('Insufficient balance');
+    wallets[sIdx].balance -= amount;
+    wallets[rIdx].balance += amount;
+    store.set('wallets', wallets);
+    const txs = store.get('transactions') || [];
+    txs.push({ id: uid(), sender_id: senderId, receiver_id: receiver.id, amount, type: 'transfer', category: category || 'General', note: note || '', status: 'completed', created_at: now() });
+    store.set('transactions', txs);
+  },
+  getTransactions: (userId, filters = {}) => {
+    const txs = store.get('transactions') || [];
+    const users = store.get('users') || [];
+    const findUser = id => users.find(u => u.id === id) || {};
+    let filtered = txs.filter(t => t.sender_id === userId || t.receiver_id === userId);
+    if (filters.type) filtered = filtered.filter(t => t.type === filters.type);
+    if (filters.category) filtered = filtered.filter(t => t.category === filters.category);
+    return filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+      .map(t => ({
+        ...t,
+        sender_name: findUser(t.sender_id).name,
+        sender_email: findUser(t.sender_id).email,
+        receiver_name: findUser(t.receiver_id).name,
+        receiver_email: findUser(t.receiver_id).email,
+      }));
+  },
+  createPaymentRequest: (requesterId, { payer_email, amount, note }) => {
+    const users = store.get('users') || [];
+    const payer = users.find(u => u.email === payer_email);
+    if (!payer) throw new Error('User not found');
+    const prs = store.get('paymentRequests') || [];
+    prs.push({ id: uid(), requester_id: requesterId, payer_id: payer.id, amount, note: note || '', status: 'pending', created_at: now() });
+    store.set('paymentRequests', prs);
+  },
+  getPaymentRequests: (userId) => {
+    const prs = store.get('paymentRequests') || [];
+    const users = store.get('users') || [];
+    const findUser = id => users.find(u => u.id === id) || {};
+    return prs
+      .filter(r => r.requester_id === userId || r.payer_id === userId)
+      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+      .map(r => ({
+        ...r,
+        requester_name: findUser(r.requester_id).name,
+        requester_email: findUser(r.requester_id).email,
+        payer_name: findUser(r.payer_id).name,
+        payer_email: findUser(r.payer_id).email,
+      }));
+  },
+  approveRequest: (userId, reqId) => {
+    const prs = store.get('paymentRequests') || [];
+    const idx = prs.findIndex(r => r.id === reqId && r.payer_id === userId && r.status === 'pending');
+    if (idx === -1) throw new Error('Request not found');
+    const req = prs[idx];
+    const wallets = store.get('wallets') || [];
+    const sIdx = wallets.findIndex(w => w.user_id === userId);
+    if (wallets[sIdx].balance < req.amount) throw new Error('Insufficient balance');
+    wallets[sIdx].balance -= req.amount;
+    const rIdx = wallets.findIndex(w => w.user_id === req.requester_id);
+    wallets[rIdx].balance += req.amount;
+    store.set('wallets', wallets);
+    prs[idx].status = 'approved';
+    store.set('paymentRequests', prs);
+    const txs = store.get('transactions') || [];
+    txs.push({ id: uid(), sender_id: userId, receiver_id: req.requester_id, amount: req.amount, type: 'transfer', category: 'Payment Request', note: req.note, status: 'completed', created_at: now() });
+    store.set('transactions', txs);
+  },
+  rejectRequest: (userId, reqId) => {
+    const prs = store.get('paymentRequests') || [];
+    const idx = prs.findIndex(r => r.id === reqId && r.payer_id === userId && r.status === 'pending');
+    if (idx === -1) throw new Error('Request not found');
+    prs[idx].status = 'rejected';
+    store.set('paymentRequests', prs);
+  },
+  getStats: (userId) => {
+    const txs = store.get('transactions') || [];
+    const mine = txs.filter(t => t.sender_id === userId || t.receiver_id === userId);
+    const totalSent = mine.filter(t => t.sender_id === userId).reduce((s, t) => s + t.amount, 0);
+    const totalReceived = mine.filter(t => t.receiver_id === userId).reduce((s, t) => s + t.amount, 0);
+    const cats = {};
+    mine.filter(t => t.sender_id === userId).forEach(t => {
+      cats[t.category] = (cats[t.category] || 0) + t.amount;
+    });
+    return { totalSent, totalReceived, txCount: mine.length, byCategory: cats };
+  }
+};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const categoryEmoji = { General:'💳', Food:'🍔', Shopping:'🛍️', Travel:'✈️', 'Add Money':'💰', Bonus:'🎁', Entertainment:'🎬', Health:'🏥', Education:'📚', Bills:'🧾', 'Payment Request':'📨' };
+const catEmoji = (cat) => categoryEmoji[cat] || '💳';
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function Toast({ msg, type, onDone }) {
+  useEffect(() => { const t = setTimeout(onDone, 3000); return () => clearTimeout(t); }, []);
+  return (
+    <div className={`toast ${type}`}>
+      <span className="toast-icon">{type === 'success' ? '✅' : '❌'}</span>
+      <span className="toast-msg">{msg}</span>
+    </div>
+  );
+}
+
+// ── MODAL ─────────────────────────────────────────────────────────────────────
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <h3>{title}</h3>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+function AuthPage({ onLogin }) {
+  const [tab, setTab] = useState('login');
+  const [form, setForm] = useState({ name:'', email:'', password:'' });
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = () => {
+    setErr(''); setLoading(true);
+    try {
+      if (tab === 'login') {
+        const res = API.login({ email: form.email, password: form.password });
+        onLogin(res.token, res.user);
+      } else {
+        if (!form.name || !form.email || !form.password) { setErr('All fields required'); setLoading(false); return; }
+        const res = API.register(form);
+        onLogin(res.token, res.user);
+      }
+    } catch(e) { setErr(e.message); }
+    setLoading(false);
+  };
+
+  const setF = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  return (
+    <div className="auth-wrap">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div className="auth-logo-icon">💳</div>
+          <h1>Pay<span>Vault</span></h1>
+        </div>
+        <div className="auth-tab">
+          <button className={tab==='login'?'active':''} onClick={()=>{setTab('login');setErr('');}}>Sign In</button>
+          <button className={tab==='register'?'active':''} onClick={()=>{setTab('register');setErr('');}}>Sign Up</button>
+        </div>
+        {tab==='register' && (
+          <div className="field">
+            <label>Full Name</label>
+            <input placeholder="Rahul Sharma" value={form.name} onChange={e=>setF('name',e.target.value)}/>
+          </div>
+        )}
+        <div className="field">
+          <label>Email Address</label>
+          <input type="email" placeholder="you@example.com" value={form.email} onChange={e=>setF('email',e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+        </div>
+        <div className="field">
+          <label>Password</label>
+          <input type="password" placeholder="••••••••" value={form.password} onChange={e=>setF('password',e.target.value)} onKeyDown={e=>e.key==='Enter'&&submit()}/>
+        </div>
+        {err && <div className="error-msg">{err}</div>}
+        <button className="btn" style={{marginTop:20}} onClick={submit} disabled={loading}>
+          {loading ? 'Please wait…' : tab==='login' ? 'Sign In' : 'Create Account'}
+        </button>
+        {tab==='login' && (
+          <p style={{marginTop:16,fontSize:'0.82rem',color:'var(--text2)',textAlign:'center'}}>
+            Demo: register an account, or use previously created one.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+function Dashboard({ user, onNavigate }) {
+  const [wallet, setWallet] = useState(null);
+  const [txs, setTxs] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [showAddMoney, setShowAddMoney] = useState(false);
+  const [addAmount, setAddAmount] = useState('');
+  const [msg, setMsg] = useState('');
+
+  const reload = () => {
+    setWallet(API.getWallet(user.id));
+    setTxs(API.getTransactions(user.id).slice(0,5));
+    setStats(API.getStats(user.id));
+  };
+  useEffect(reload, []);
+
+  const handleAddMoney = () => {
+    const amt = parseFloat(addAmount);
+    if (!amt || amt <= 0) return;
+    try {
+      API.addMoney(user.id, amt);
+      setShowAddMoney(false); setAddAmount(''); setMsg('Money added!');
+      reload(); setTimeout(()=>setMsg(''),2500);
+    } catch(e) { setMsg(e.message); }
+  };
+
+  const isSent = (tx) => tx.sender_id === user.id;
+  const txDir = (tx) => isSent(tx) ? 'debit' : 'credit';
+  const txSign = (tx) => isSent(tx) ? '-' : '+';
+  const txParty = (tx) => isSent(tx) ? (tx.receiver_name || 'Wallet Credit') : (tx.sender_name || 'Wallet');
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Dashboard</h2>
+        <p>Welcome back, {user.name} 👋</p>
+      </div>
+
+      <div className="grid-2" style={{marginBottom:20}}>
+        {wallet && (
+          <div className="balance-card">
+            <div className="balance-label">Total Balance</div>
+            <div className="balance-amount">
+              <span className="balance-currency">₹</span>
+              {Number(wallet.balance).toLocaleString('en-IN', {minimumFractionDigits:2,maximumFractionDigits:2})}
+            </div>
+            {stats && (
+              <div className="balance-meta">
+                <div className="balance-meta-item">
+                  <div className="lbl">Total Sent</div>
+                  <div className="val">{fmtMoney(stats.totalSent)}</div>
+                </div>
+                <div className="balance-meta-item">
+                  <div className="lbl">Total Received</div>
+                  <div className="val">{fmtMoney(stats.totalReceived)}</div>
+                </div>
+                <div className="balance-meta-item">
+                  <div className="lbl">Transactions</div>
+                  <div className="val">{stats.txCount}</div>
+                </div>
+              </div>
+            )}
+            <div className="balance-actions">
+              <button className="balance-btn" onClick={()=>setShowAddMoney(true)}>＋ Add Money</button>
+              <button className="balance-btn" onClick={()=>onNavigate('transfer')}>⇗ Send Money</button>
+              <button className="balance-btn" onClick={()=>onNavigate('requests')}>📨 Request</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {stats && (
+        <div className="grid-4" style={{marginBottom:20}}>
+          <div className="card stat-card">
+            <div className="stat-icon" style={{background:'rgba(108,99,255,0.12)',color:'var(--accent)'}}>📤</div>
+            <div className="stat-label">Total Sent</div>
+            <div className="stat-value">{fmtMoney(stats.totalSent)}</div>
+          </div>
+          <div className="card stat-card">
+            <div className="stat-icon" style={{background:'rgba(67,233,123,0.12)',color:'var(--accent3)'}}>📥</div>
+            <div className="stat-label">Total Received</div>
+            <div className="stat-value" style={{color:'var(--accent3)'}}>{fmtMoney(stats.totalReceived)}</div>
+          </div>
+          <div className="card stat-card">
+            <div className="stat-icon" style={{background:'rgba(247,151,30,0.12)',color:'var(--accent4)'}}>🔄</div>
+            <div className="stat-label">Transactions</div>
+            <div className="stat-value">{stats.txCount}</div>
+          </div>
+          <div className="card stat-card">
+            <div className="stat-icon" style={{background:'rgba(255,107,107,0.12)',color:'var(--accent2)'}}>📊</div>
+            <div className="stat-label">Categories Used</div>
+            <div className="stat-value">{Object.keys(stats.byCategory).length}</div>
+          </div>
+        </div>
+      )}
+
+      <div className="grid-2">
+        <div className="card">
+          <div className="section-header">
+            <h3>Recent Transactions</h3>
+            <span className="see-all" onClick={()=>onNavigate('transactions')}>See all →</span>
+          </div>
+          {txs.length === 0 ? (
+            <div className="empty-state"><div className="icon">💸</div><p>No transactions yet</p></div>
+          ) : (
+            <div className="tx-list">
+              {txs.map(tx => (
+                <div className="tx-item" key={tx.id}>
+                  <div className="tx-icon" style={{background: isSent(tx)?'rgba(255,107,107,0.1)':'rgba(67,233,123,0.1)'}}>
+                    {catEmoji(tx.category)}
+                  </div>
+                  <div className="tx-info">
+                    <div className="title">{txParty(tx) || (tx.type==='credit'?'Wallet Credit':'Transfer')}</div>
+                    <div className="sub">{tx.category} · {fmt(tx.created_at)}</div>
+                  </div>
+                  <div className={`tx-amount ${txDir(tx)}`}>{txSign(tx)}{fmtMoney(tx.amount)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {stats && Object.keys(stats.byCategory).length > 0 && (
+          <div className="card">
+            <div className="section-header"><h3>Spending by Category</h3></div>
+            {Object.entries(stats.byCategory).map(([cat, amt]) => (
+              <div key={cat} style={{marginBottom:12}}>
+                <div className="flex-between" style={{marginBottom:4}}>
+                  <span style={{fontSize:'0.85rem',display:'flex',alignItems:'center',gap:6}}>
+                    {catEmoji(cat)} {cat}
+                  </span>
+                  <span style={{fontWeight:600,fontSize:'0.88rem'}}>{fmtMoney(amt)}</span>
+                </div>
+                <div style={{height:6,background:'var(--surface2)',borderRadius:4,overflow:'hidden'}}>
+                  <div style={{
+                    height:'100%', borderRadius:4,
+                    background:'linear-gradient(90deg,var(--accent),#a78bfa)',
+                    width: `${Math.min(100, (amt/stats.totalSent)*100)}%`
+                  }}/>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {msg && <div className="success-msg" style={{marginTop:16}}>{msg}</div>}
+
+      {showAddMoney && (
+        <Modal title="Add Money to Wallet" onClose={()=>setShowAddMoney(false)}>
+          <div className="field">
+            <label>Amount (₹)</label>
+            <div className="amount-input-wrap">
+              <span className="amount-prefix">₹</span>
+              <input type="number" placeholder="Enter amount" value={addAmount} onChange={e=>setAddAmount(e.target.value)} className="field input" style={{paddingLeft:34}}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:10,marginTop:8}}>
+            {[100,500,1000,2000].map(q => (
+              <button key={q} className="btn btn-outline btn-sm" onClick={()=>setAddAmount(String(q))}>+{q}</button>
+            ))}
+          </div>
+          <button className="btn" style={{marginTop:20}} onClick={handleAddMoney}>Add Money</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── TRANSFER ──────────────────────────────────────────────────────────────────
+function TransferPage({ user, onToast }) {
+  const [form, setForm] = useState({ to_email:'', amount:'', category:'General', note:'' });
+  const [wallet, setWallet] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { setWallet(API.getWallet(user.id)); }, []);
+  const setF = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  const submit = () => {
+    const amt = parseFloat(form.amount);
+    if (!form.to_email || !amt || amt <= 0) { onToast('Please fill all fields', 'error'); return; }
+    setLoading(true);
+    try {
+      API.transfer(user.id, { ...form, amount: amt });
+      onToast('Transfer successful! ✓', 'success');
+      setForm({ to_email:'', amount:'', category:'General', note:'' });
+      setWallet(API.getWallet(user.id));
+    } catch(e) { onToast(e.message, 'error'); }
+    setLoading(false);
+  };
+
+  const cats = ['General','Food','Shopping','Travel','Entertainment','Health','Education','Bills'];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Send Money</h2>
+        <p>Transfer funds instantly to any registered user</p>
+      </div>
+      <div className="grid-2">
+        <div className="card">
+          <div className="field">
+            <label>Recipient Email</label>
+            <input type="email" placeholder="friend@example.com" value={form.to_email} onChange={e=>setF('to_email',e.target.value)}/>
+          </div>
+          <div className="field">
+            <label>Amount (₹)</label>
+            <div className="amount-input-wrap">
+              <span className="amount-prefix">₹</span>
+              <input type="number" placeholder="0.00" value={form.amount} onChange={e=>setF('amount',e.target.value)} style={{paddingLeft:34}}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:18,flexWrap:'wrap'}}>
+            {[100,200,500,1000].map(q => (
+              <button key={q} className="btn btn-outline btn-sm" onClick={()=>setF('amount',String(q))}>₹{q}</button>
+            ))}
+          </div>
+          <div className="field">
+            <label>Category</label>
+            <select value={form.category} onChange={e=>setF('category',e.target.value)}>
+              {cats.map(c => <option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Note (optional)</label>
+            <textarea rows={2} placeholder="What's this for?" value={form.note} onChange={e=>setF('note',e.target.value)}/>
+          </div>
+          <button className="btn" onClick={submit} disabled={loading}>
+            {loading ? 'Processing…' : '⇗ Send Money'}
+          </button>
+        </div>
+        <div>
+          {wallet && (
+            <div className="card" style={{marginBottom:16}}>
+              <div style={{fontSize:'0.8rem',color:'var(--text2)',marginBottom:8}}>Available Balance</div>
+              <div style={{fontFamily:'Syne,sans-serif',fontSize:'2rem',fontWeight:800}}>{fmtMoney(wallet.balance)}</div>
+            </div>
+          )}
+          <div className="card">
+            <h3 style={{marginBottom:16,fontSize:'0.95rem'}}>💡 Transfer Tips</h3>
+            <p style={{fontSize:'0.85rem',color:'var(--text2)',lineHeight:1.6}}>
+              • Double-check the recipient's email<br/>
+              • Transfers are instant and irreversible<br/>
+              • Add a note for easy tracking<br/>
+              • Choose the right category for reports
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TRANSACTIONS ──────────────────────────────────────────────────────────────
+function TransactionsPage({ user }) {
+  const [txs, setTxs] = useState([]);
+  const [filters, setFilters] = useState({ type:'', category:'' });
+
+  const reload = () => setTxs(API.getTransactions(user.id, filters));
+  useEffect(reload, [filters]);
+
+  const isSent = (tx) => tx.sender_id === user.id;
+  const txDir = (tx) => isSent(tx) ? 'debit' : 'credit';
+  const txSign = (tx) => isSent(tx) ? '-' : '+';
+
+  const cats = ['General','Food','Shopping','Travel','Entertainment','Health','Education','Bills','Add Money','Bonus','Payment Request'];
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Transaction History</h2>
+        <p>View and filter all your wallet activity</p>
+      </div>
+      <div className="card">
+        <div className="filter-bar">
+          <select value={filters.type} onChange={e=>setFilters(p=>({...p,type:e.target.value}))}>
+            <option value="">All Types</option>
+            <option value="transfer">Transfer</option>
+            <option value="credit">Credit</option>
+          </select>
+          <select value={filters.category} onChange={e=>setFilters(p=>({...p,category:e.target.value}))}>
+            <option value="">All Categories</option>
+            {cats.map(c=><option key={c}>{c}</option>)}
+          </select>
+          <button className="btn btn-outline btn-sm" onClick={()=>setFilters({type:'',category:''})}>Clear</button>
+          <span style={{marginLeft:'auto',fontSize:'0.85rem',color:'var(--text2)'}}>{txs.length} transactions</span>
+        </div>
+        {txs.length === 0 ? (
+          <div className="empty-state"><div className="icon">📭</div><p>No transactions found</p></div>
+        ) : (
+          <div className="tx-list">
+            {txs.map(tx => (
+              <div className="tx-item" key={tx.id} style={{borderBottom:'1px solid var(--border)',paddingBottom:14,marginBottom:2}}>
+                <div className="tx-icon" style={{background:isSent(tx)?'rgba(255,107,107,0.1)':'rgba(67,233,123,0.1)'}}>
+                  {catEmoji(tx.category)}
+                </div>
+                <div className="tx-info">
+                  <div className="title">
+                    {isSent(tx) ? `To: ${tx.receiver_name||tx.receiver_email||'Unknown'}` : `From: ${tx.sender_name||'Wallet Credit'}`}
+                  </div>
+                  <div className="sub">{tx.note && `${tx.note} · `}{tx.category} · {fmt(tx.created_at)}</div>
+                </div>
+                <div style={{textAlign:'right'}}>
+                  <div className={`tx-amount ${txDir(tx)}`}>{txSign(tx)}{fmtMoney(tx.amount)}</div>
+                  <div style={{fontSize:'0.73rem',color:'var(--text2)',marginTop:2}}>{tx.status}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── PAYMENT REQUESTS ──────────────────────────────────────────────────────────
+function RequestsPage({ user, onToast }) {
+  const [requests, setRequests] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ payer_email:'', amount:'', note:'' });
+
+  const reload = () => setRequests(API.getPaymentRequests(user.id));
+  useEffect(reload, []);
+  const setF = (k,v) => setForm(p=>({...p,[k]:v}));
+
+  const sendRequest = () => {
+    const amt = parseFloat(form.amount);
+    if (!form.payer_email || !amt) { onToast('Fill all required fields', 'error'); return; }
+    try {
+      API.createPaymentRequest(user.id, { ...form, amount: amt });
+      onToast('Payment request sent!', 'success');
+      setShowForm(false); setForm({ payer_email:'', amount:'', note:'' });
+      reload();
+    } catch(e) { onToast(e.message, 'error'); }
+  };
+
+  const approve = (id) => {
+    try { API.approveRequest(user.id, id); onToast('Payment approved!', 'success'); reload(); }
+    catch(e) { onToast(e.message, 'error'); }
+  };
+  const reject = (id) => {
+    try { API.rejectRequest(user.id, id); onToast('Request rejected', 'success'); reload(); }
+    catch(e) { onToast(e.message, 'error'); }
+  };
+
+  const incoming = requests.filter(r => r.payer_id === user.id);
+  const outgoing = requests.filter(r => r.requester_id === user.id);
+
+  return (
+    <div>
+      <div className="page-header flex-between">
+        <div>
+          <h2>Payment Requests</h2>
+          <p>Request money from others or manage incoming requests</p>
+        </div>
+        <button className="btn btn-sm" style={{width:'auto',padding:'10px 20px'}} onClick={()=>setShowForm(true)}>
+          ＋ New Request
+        </button>
+      </div>
+
+      <div className="grid-2">
+        <div>
+          <h3 style={{marginBottom:16,fontSize:'0.95rem',color:'var(--text2)'}}>📥 Incoming ({incoming.length})</h3>
+          {incoming.length === 0 ? (
+            <div className="card"><div className="empty-state"><div className="icon">📭</div><p>No incoming requests</p></div></div>
+          ) : incoming.map(r => (
+            <div className="pr-card" key={r.id}>
+              <div style={{fontSize:'1.5rem'}}>📨</div>
+              <div className="pr-card-info">
+                <div className="title">From: {r.requester_name}</div>
+                <div className="sub">{r.requester_email} · {fmt(r.created_at)}</div>
+                {r.note && <div className="sub" style={{marginTop:4}}>Note: {r.note}</div>}
+                <div className="pr-card-amount" style={{marginTop:8}}>{fmtMoney(r.amount)}</div>
+                {r.status === 'pending' ? (
+                  <div className="pr-card-actions">
+                    <button className="btn btn-success btn-sm" onClick={()=>approve(r.id)}>✓ Approve</button>
+                    <button className="btn btn-danger btn-sm" onClick={()=>reject(r.id)}>✕ Reject</button>
+                  </div>
+                ) : (
+                  <div style={{marginTop:8}}><span className={`badge badge-${r.status}`}>{r.status}</span></div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div>
+          <h3 style={{marginBottom:16,fontSize:'0.95rem',color:'var(--text2)'}}>📤 Outgoing ({outgoing.length})</h3>
+          {outgoing.length === 0 ? (
+            <div className="card"><div className="empty-state"><div className="icon">📭</div><p>No outgoing requests</p></div></div>
+          ) : outgoing.map(r => (
+            <div className="pr-card" key={r.id}>
+              <div style={{fontSize:'1.5rem'}}>💸</div>
+              <div className="pr-card-info">
+                <div className="title">To: {r.payer_name}</div>
+                <div className="sub">{r.payer_email} · {fmt(r.created_at)}</div>
+                {r.note && <div className="sub" style={{marginTop:4}}>Note: {r.note}</div>}
+                <div className="pr-card-amount" style={{marginTop:8}}>{fmtMoney(r.amount)}</div>
+                <div style={{marginTop:8}}><span className={`badge badge-${r.status}`}>{r.status}</span></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {showForm && (
+        <Modal title="Request Payment" onClose={()=>setShowForm(false)}>
+          <div className="field">
+            <label>From (Email)</label>
+            <input type="email" placeholder="person@example.com" value={form.payer_email} onChange={e=>setF('payer_email',e.target.value)}/>
+          </div>
+          <div className="field">
+            <label>Amount (₹)</label>
+            <div className="amount-input-wrap">
+              <span className="amount-prefix">₹</span>
+              <input type="number" placeholder="0.00" value={form.amount} onChange={e=>setF('amount',e.target.value)} style={{paddingLeft:34}}/>
+            </div>
+          </div>
+          <div className="field">
+            <label>Note (optional)</label>
+            <textarea rows={2} placeholder="Reason for request" value={form.note} onChange={e=>setF('note',e.target.value)}/>
+          </div>
+          <button className="btn" onClick={sendRequest}>Send Request</button>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// ── PROFILE ───────────────────────────────────────────────────────────────────
+function ProfilePage({ user, onLogout }) {
+  const [wallet, setWallet] = useState(null);
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    setWallet(API.getWallet(user.id));
+    setStats(API.getStats(user.id));
+  }, []);
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>My Profile</h2>
+        <p>Your account details and wallet overview</p>
+      </div>
+      <div className="grid-2">
+        <div className="card" style={{textAlign:'center',padding:40}}>
+          <div style={{
+            width:80,height:80,borderRadius:'50%',margin:'0 auto 20px',
+            background:'linear-gradient(135deg,var(--accent),#a78bfa)',
+            display:'grid',placeItems:'center',
+            fontFamily:'Syne,sans-serif',fontWeight:800,fontSize:'2rem'
+          }}>
+            {user.name[0].toUpperCase()}
+          </div>
+          <h2 style={{marginBottom:4}}>{user.name}</h2>
+          <p style={{color:'var(--text2)',marginBottom:24}}>{user.email}</p>
+          {wallet && (
+            <div style={{background:'var(--surface2)',borderRadius:14,padding:'16px 20px',marginBottom:20}}>
+              <div style={{fontSize:'0.8rem',color:'var(--text2)',marginBottom:4}}>Wallet Balance</div>
+              <div style={{fontFamily:'Syne',fontWeight:800,fontSize:'1.8rem',color:'var(--accent)'}}>{fmtMoney(wallet.balance)}</div>
+            </div>
+          )}
+          <button className="btn btn-danger" style={{maxWidth:200,margin:'0 auto'}} onClick={onLogout}>Sign Out</button>
+        </div>
+        {stats && (
+          <div className="card">
+            <h3 style={{marginBottom:20}}>Account Statistics</h3>
+            <div style={{display:'flex',flexDirection:'column',gap:14}}>
+              {[
+                ['Total Transactions', stats.txCount, '🔄'],
+                ['Total Sent', fmtMoney(stats.totalSent), '📤'],
+                ['Total Received', fmtMoney(stats.totalReceived), '📥'],
+                ['Categories Used', Object.keys(stats.byCategory).length, '📊'],
+              ].map(([label, value, icon]) => (
+                <div key={label} className="flex-between" style={{padding:'12px 16px',background:'var(--surface2)',borderRadius:12}}>
+                  <span style={{color:'var(--text2)',fontSize:'0.88rem'}}>{icon} {label}</span>
+                  <span style={{fontFamily:'Syne',fontWeight:700}}>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── APP SHELL ─────────────────────────────────────────────────────────────────
+function App() {
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [user, setUser] = useState(() => {
+    const t = localStorage.getItem('token');
+    return t ? API.getUser(t) : null;
+  });
+  const [page, setPage] = useState('dashboard');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type='success') => setToast({ msg, type });
+
+  const handleLogin = (tok, usr) => {
+    localStorage.setItem('token', tok);
+    setToken(tok); setUser(usr);
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null); setUser(null);
+  };
+
+  if (!token || !user) return <AuthPage onLogin={handleLogin}/>;
+
+  const navItems = [
+    { id:'dashboard', icon:'🏠', label:'Dashboard' },
+    { id:'transfer', icon:'⇗', label:'Send Money' },
+    { id:'transactions', icon:'📋', label:'Transactions' },
+    { id:'requests', icon:'📨', label:'Requests' },
+    { id:'profile', icon:'👤', label:'Profile' },
+  ];
+
+  const renderPage = () => {
+    switch(page) {
+      case 'dashboard': return <Dashboard user={user} onNavigate={setPage}/>;
+      case 'transfer': return <TransferPage user={user} onToast={showToast}/>;
+      case 'transactions': return <TransactionsPage user={user}/>;
+      case 'requests': return <RequestsPage user={user} onToast={showToast}/>;
+      case 'profile': return <ProfilePage user={user} onLogout={handleLogout}/>;
+      default: return <Dashboard user={user} onNavigate={setPage}/>;
+    }
+  };
+
+  return (
+    <div className="app-layout">
+      <aside className="sidebar">
+        <div className="sidebar-logo">
+          <div className="sidebar-logo-icon">💳</div>
+          <h2>Pay<span>Vault</span></h2>
+        </div>
+        <div className="nav-section-label">Menu</div>
+        {navItems.map(item => (
+          <div key={item.id} className={`nav-item ${page===item.id?'active':''}`} onClick={()=>setPage(item.id)}>
+            <span className="nav-icon">{item.icon}</span>
+            {item.label}
+          </div>
+        ))}
+        <div className="sidebar-footer">
+          <div className="user-badge">
+            <div className="user-avatar">{user.name[0].toUpperCase()}</div>
+            <div className="user-info">
+              <div className="name">{user.name}</div>
+              <div className="email">{user.email}</div>
+            </div>
+          </div>
+          <button className="btn-logout" onClick={handleLogout}>Sign Out</button>
+        </div>
+      </aside>
+      <main className="main">
+        {renderPage()}
+      </main>
+      {toast && <Toast msg={toast.msg} type={toast.type} onDone={()=>setToast(null)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

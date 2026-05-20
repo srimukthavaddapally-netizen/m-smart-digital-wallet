@@ -2,6 +2,50 @@
 
 > NxtWave Full Stack Development – Set 5, Project 19
 
+## 🔐 Demo Login Credentials
+Account 1:
+- Email: srimukthavaddapally@gmail.com
+- Password: 1234567890
+
+Account 2:
+- Email: mukthavalli123@gmail.com
+- Password: 2003
+
+## 🌐 Live App
+https://srimukthavaddapally-netizen.github.io/m-smart-digital-wallet/wallet_app.html
+
+📁 GitHub Repo 
+https://github.com/srimukthavaddapally-netizen/m-smart-digital-wallet
+
+📸 UI Screenshots
+🔑 Login / Register Page
+
+Clean dark-themed auth screen
+Toggle between Sign In and Sign Up
+Form validation on all fields
+
+<img width="1361" height="632" alt="Screenshot 2026-05-20 152247" src="https://github.com/user-attachments/assets/062d1c7d-8023-464a-959e-21d5287d6bb8" />
+
+🏠 Dashboard
+
+Shows total wallet balance (e.g. ₹1,000.00)
+Stats cards: Total Sent, Total Received, Transactions, Categories Used
+Recent Transactions list
+Quick action buttons: Add Money, Send Money, Request
+
+<img width="1359" height="633" alt="Screenshot 2026-05-20 152434" src="https://github.com/user-attachments/assets/d320dbee-2598-498c-8759-062d1d39a5c5" />
+
+📋 Transaction History
+
+Full list of all transactions
+Filter by Type (Transfer / Credit)
+Filter by Category (Food, Shopping, Travel, etc.)
+Shows sender/receiver name, amount, date, status
+
+<img width="1363" height="630" alt="Screenshot 2026-05-20 153048" src="https://github.com/user-attachments/assets/e874e1f3-99ac-4cc7-8068-3999582e85c4" />
+
+
+
 ## 🏗️ Tech Stack
 | Layer | Technology |
 |-------|-----------|
@@ -127,6 +171,7 @@ wallet-project/
 ---
 
 ## 👨‍💻 Submitted By
+Sri Muktha
 NxtWave Full Stack Development Student  
 Project: Smart Digital Wallet & Payment Management System  
 Set: 5 | Project: 19
